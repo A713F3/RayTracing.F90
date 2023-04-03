@@ -7,6 +7,7 @@ module sphere_module
     type sphere 
         type(vec3) :: c
         real :: r
+        type(vec3) :: color
     end type sphere
     
 contains
