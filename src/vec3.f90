@@ -91,4 +91,14 @@ contains
         v2 = vec3(clamp_val(t, v1%x), clamp_val(t, v1%y), clamp_val(t, v1%z))
     end function clamp
 
+    function unit_vector(v)
+        type(vec3), intent(in) :: v
+        type(vec3) :: unit_vector
+        real :: len
+
+        len = sqrt(v%x**2 + v%y**2 + v%z**2)
+
+        unit_vector = v / len
+    end function
+
 end module vec3_module
