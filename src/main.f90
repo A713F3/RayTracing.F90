@@ -4,7 +4,6 @@ program raytracing
     use sphere_module
     use hit_record_module
     use material_module
-    use ppm
 
     implicit none
 
@@ -17,15 +16,15 @@ program raytracing
     integer :: image_height, image_width, x, y, sample, samples_per_pixel
 
     world = (/                                                                                 &
-            sphere(vec3(  0.0, 100.5, -1.0), 100.0, material(vec3(0.11, 0.11, 0.11), "LAM")),  & ! ground
+            sphere(vec3(  0.0, 100.5, -1.0), 100.0, material(vec3(0.8,  0.8,  0.8), "MET")),  & ! ground
             sphere(vec3( -0.5,   0.0, -1.2),   0.5, material(vec3(0.75, 0.93, 0.33), "LAM")),  & ! left
             sphere(vec3(  0.5,   0.0, -1.2),   0.5, material(vec3(0.8,  0.8,  0.8),  "MET")) /)  ! right
 
     ! Image
-    aspect_ratio = 16.0 / 9.0
-    image_height = 700
-    image_width = int(aspect_ratio * real(image_height))
-    samples_per_pixel = 10
+    aspect_ratio = 256.0 / 160.0 !16.0 / 9.0
+    image_height = 700 !1600 
+    image_width = int(aspect_ratio * real(image_height)) !2560 
+    samples_per_pixel = 50
 
     ! Camera
     viewport_height = 2.0
@@ -37,7 +36,11 @@ program raytracing
     vertical = vec3(0.0, viewport_height, 0.0)
     lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - vec3(0, 0, focal_length)
 
-    call ppm_init(image_width, image_height)
+    open(1, file="o.ppm")
+
+    write(1, "(A2)") "P3"
+    write(1, "(I5, X, I5)") image_width, image_height
+    write(1, "(I3)") 255
 
     print*, "Writing to file: ", image_width*image_height
     write(*,"(20A)") "********************"
@@ -65,20 +68,18 @@ program raytracing
 
             pix_col = clamp(0.999, pix_col) * 256.0
 
-            !pix_col = pix_col * 255.9999 
-
-            call point(x, y, color(int(pix_col%x), int(pix_col%y), int(pix_col%z)))
+            write(1, "(I3, X, I3, X, I3, /)", advance="no") &
+                int(pix_col%x), int(pix_col%y), int(pix_col%z)
 
             if (mod(y*image_width + x, int(image_height*image_width*0.05)) .eq. 0) then
-                write(*, "(A)", advance="no") "*"
+                write(*, "(A)", advance="no") "="
             end if
         end do
     end do
 
     print*
-    call render_image(1, "o", .true.)
 
-    call ppm_release()
+    close(1)
 
 contains
 
@@ -223,7 +224,8 @@ contains
 
         unit_direction = unit_vector(r%direction)
         t = 0.5 * (unit_direction%y + 1.0)
-        r_color = vec3(1.0, 1.0, 1.0)*(t) + vec3(0.5, 0.7, 1.0)*(1-t)
+        !r_color = vec3(1.0, 1.0, 1.0)*(t) + vec3(0.5, 0.7, 1.0)*(1-t)
+        r_color = vec3(1.0, 1.0, 1.0)
 
     end function
 
