@@ -1,10 +1,7 @@
 
 
-all: material.o hit_record.o ppm.o vec3.o ray.o sphere.o main.o
-	gfortran -o main.out main.o ppm.o vec3.o ray.o sphere.o hit_record.o
-
-ppm.o: ppm.f90
-	gfortran -c ppm.f90
+all: camera.o material.o hit_record.o vec3.o ray.o sphere.o main.o
+	gfortran -o main.out main.o vec3.o ray.o sphere.o hit_record.o camera.o
 
 main.o: main.f90
 	gfortran -c main.f90
@@ -23,3 +20,6 @@ hit_record.o: hit_record.f90
 
 material.o: material.f90
 	gfortran -c material.f90
+
+camera.o: camera.f90
+	gfortran -c camera.f90

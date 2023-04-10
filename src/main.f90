@@ -4,37 +4,32 @@ program raytracing
     use sphere_module
     use hit_record_module
     use material_module
+    use camera_module
 
     implicit none
 
-    type(vec3) :: pix_col, origin, lower_left_corner
-    type(vec3) ::  horizontal, vertical
-    type(sphere), dimension(3) :: world
+    type(vec3) :: pix_col
+    type(sphere), dimension(5) :: world
     type(ray) :: ry
-    real :: aspect_ratio, viewport_height, viewport_width
-    real :: focal_length, u, v, rand_u, rand_v
+    type(camera) :: cam
+    real :: aspect_ratio, u, v, rand_u, rand_v
     integer :: image_height, image_width, x, y, sample, samples_per_pixel
 
-    world = (/                                                                                 &
-            sphere(vec3(  0.0, 100.5, -1.0), 100.0, material(vec3(0.8,  0.8,  0.8), "MET")),  & ! ground
-            sphere(vec3( -0.5,   0.0, -1.2),   0.5, material(vec3(0.75, 0.93, 0.33), "LAM")),  & ! left
-            sphere(vec3(  0.5,   0.0, -1.2),   0.5, material(vec3(0.8,  0.8,  0.8),  "MET")) /)  ! right
+    world = (/                                                                                              &
+            sphere(vec3(   0.0, -1000.0,   0.0), 1000.0, material(vec3( 30.0,  30.0,  30.0)/256.0, "LAM")), & 
+            sphere(vec3(   0.0,     3.0,  -5.0),    3.0, material(vec3(213.0, 239.0,  85.0)/256.0, "LAM")), & 
+            sphere(vec3(  -2.0,     1.0,   0.0),    1.0, material(vec3(190.0, 190.0, 190.0)/256.0, "LAM")), & 
+            sphere(vec3(   0.0,     1.0,   0.0),    1.0, material(vec3(135.0, 206.0, 235.0)/256.0, "LAM")), & 
+            sphere(vec3(   2.0,     1.0,   0.0),    1.0, material(vec3(253.0, 127.0,  32.0)/256.0, "LAM")) /) 
 
     ! Image
-    aspect_ratio = 256.0 / 160.0 !16.0 / 9.0
-    image_height = 700 !1600 
-    image_width = int(aspect_ratio * real(image_height)) !2560 
-    samples_per_pixel = 50
+    aspect_ratio = 256.0 / 160.0 !16.0 / 9.0 ! 256.0 / 160.0
+    image_width = 2560
+    image_height = int(real(image_width) / aspect_ratio) !2560
+    samples_per_pixel = 500
 
     ! Camera
-    viewport_height = 2.0
-    viewport_width = aspect_ratio * viewport_height
-    focal_length = 1.0
-
-    origin = vec3(0.0, 0.0, 0.0)
-    horizontal = vec3(viewport_width, 0.0, 0.0)
-    vertical = vec3(0.0, viewport_height, 0.0)
-    lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - vec3(0, 0, focal_length)
+    cam = init_camera(vec3(0.0,1.0,5.0), vec3(0.0,1.0,0.0), vec3(0.0,1.0,0.0), 60.0, aspect_ratio)
 
     open(1, file="o.ppm")
 
@@ -43,7 +38,7 @@ program raytracing
     write(1, "(I3)") 255
 
     print*, "Writing to file: ", image_width*image_height
-    write(*,"(20A)") "********************"
+    write(*, "(20A)") "--------------------"
 
     do y=1, image_height
         do x=1, image_width
@@ -55,9 +50,10 @@ program raytracing
 
                 u = (real(x) + rand_u) / (image_width)
                 v = (real(y) + rand_v) / (image_height)
-                ry = ray(origin, lower_left_corner + horizontal*u + vertical*v - origin);
 
-                pix_col = pix_col + ray_color(ry, world, 3, 50)
+                ry = cam%get_ray(u, v)
+
+                pix_col = pix_col + ray_color(ry, world, size(world), 50)
             end do
 
             pix_col =  pix_col / real(samples_per_pixel)
@@ -224,8 +220,7 @@ contains
 
         unit_direction = unit_vector(r%direction)
         t = 0.5 * (unit_direction%y + 1.0)
-        !r_color = vec3(1.0, 1.0, 1.0)*(t) + vec3(0.5, 0.7, 1.0)*(1-t)
-        r_color = vec3(1.0, 1.0, 1.0)
+        r_color = vec3(1.0, 1.0, 1.0)*(t) + vec3(0.5, 0.7, 1.0)*(1-t)
 
     end function
 
